@@ -12,17 +12,33 @@
 </template>
 
 <script>
+import {io} from "socket.io-client";
+
 export default {
     data() {
         return {
             messages: [],
             newMessage: '',
+            socket: null,
         };
     },
+    created() {
+        this.socket = io('http://localhost:3000');
+        this.socket.on('new-message', (message) => {
+            this.messages.push(message);
+        });
+    },
+
+
     methods: {
-        sendMessage() {
-            // Logic to send a new message will go here
-        },
+        async sendMessage() {
+            if (this.newMessage.trim() === '') return;
+
+            const response = await axios.post('/send-message', { content: this.newMessage });
+            this.messages.push(response.data);
+            this.newMessage = '';
+            this.socket.emit('send-message', response.data);
+        }
     },
 };
 </script>
